@@ -11,25 +11,6 @@ from random import randint
 
 
 
-class EvilWizard (pygame.sprite.Sprite):
-
-    def __init__(self, pos_x, pos_y):
-        super().__init__()
-        self.wizard_image_idle = pygame.image.load('assets/characters/EVil Wizard 2/Sprites/Idle.png').convert_alpha()
-        self.image = pygame.Surface([250,250])
-        self.image.fill((255,255,255))
-        self.rect = self.image.get_rect()
-        self.rect = self.wizard_image_idle.get_rect(center = (1024/2, 576/2))
-
-    # def _idle (self, screen):
-    #     self.wizard_show = pygame.surface(250,250)
-    #     self.wizard_surface_idle = self.wizard_image_idle.scroll(250,0)
-    #     screen.blit(self.wizard_surface_idle, self.wizard_show)
-
-
-
-
-
 
 if __name__ == '__main__':
     pygame.init()
@@ -39,15 +20,20 @@ if __name__ == '__main__':
     clock = pygame.time.Clock()
     title_font = pygame.font.Font(None, 50)
     game_active = True
-    idle = True
+    # idle = True
     player_gravity = 0
+    direction_right = False
+    animation = 'idle'
+
 
     sky_surface = pygame.image.load('assets/characters/Background/sky.png').convert()
     sky_box = sky_surface.get_rect(center = (screen_width/2, screen_height/2))
 
-    # player = EvilWizard(0, 0)
     player = SpriteSheet('assets/characters/EVil Wizard 2/Sprites/Idle.png')
     player_run = SpriteSheet('assets/characters/EVil Wizard 2/Sprites/Run.png')
+    player_fall = SpriteSheet('assets/characters/EVil Wizard 2/Sprites/Fall.png')
+
+    floor = screen_height - 180
 
     while True:
         for event in pygame.event.get():
@@ -68,18 +54,20 @@ if __name__ == '__main__':
 
                     if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
                         # Move right
+                        animation = 'move_right'
                         direction_right = True
 
 
 
                     if event.key == pygame.K_a or event.key == pygame.K_LEFT:
                         # Move left
+                        animation = 'move_left'
                         direction_right = False
 
-                    # if (event.key == pygame.K_w or event.key == pygame.K_UP) and player.player_box.y == 470:
+                    # if (event.key == pygame.K_w or event.key == pygame.K_UP) and sprite_rect.y == floor:
                     if (event.key == pygame.K_w or event.key == pygame.K_UP):
-                        animation = True
-                        player_gravity -= 20
+                        animation = 'jump'
+                        player_gravity -= 120
 
 
                     if event.key == pygame.K_f :
@@ -87,7 +75,8 @@ if __name__ == '__main__':
 
 
                 if event.type == pygame.KEYUP:
-                        idle = True
+                        if animation == 'move_right' or animation == 'move_left':
+                            animation = 'idle'
                         direction = (0, 0)
 
             else:
@@ -100,22 +89,73 @@ if __name__ == '__main__':
 
             screen.blit(sky_surface,sky_box)
 
-            if idle:
+
+            if animation =='idle':
                 sprite = player.get_sprite(250 * player.animation_mov(8, 0)[0], 250 * player.animation_mov(8, 0)[1]
                                            , 250,250)
+            elif animation == 'move_right':
+                sprite = player_run.get_sprite(250 * player.animation_mov(8, 0)[0],
+                                               250 * player.animation_mov(8, 0)[1]
+                                               , 250, 250)
+            elif animation == 'move_left':
+                sprite = player_run.get_sprite(250 * player.animation_mov(8, 0)[0],
+                                               250 * player.animation_mov(8, 0)[1]
+                                               , 250, 250)
+                sprite = pygame.transform.flip(sprite, True, False)
+
+            elif animation == 'jump':
+                sprite = player_fall.get_sprite(250 * player.animation_mov(2, 0)[0],
+                                                250 * player.animation_mov(2, 0)[1]
+                                                , 250, 250)
             else:
-                    if direction_right:
-                        sprite = player_run.get_sprite(250 * player.animation_mov(8, 0)[0],
-                                                       250 * player.animation_mov(8, 0)[1]
-                                                       , 250, 250)
-                    else:
-                        sprite = player_run.get_sprite(250 * player.animation_mov(8, 0)[0],
-                                                       250 * player.animation_mov(8, 0)[1]
-                                                       , 250, 250)
-                        sprite = pygame.transform.flip(sprite, True, False)
+                sprite = player.get_sprite(250 * player.animation_mov(8, 0)[0], 250 * player.animation_mov(8, 0)[1]
+                                           , 250,250)
+                animation = 'idle'
 
 
-            screen.blit(sprite, sprite.get_rect(center = (screen_width/2, screen_height/2)))
+
+
+
+
+
+
+
+
+
+
+
+            # if idle:
+            #     sprite = player.get_sprite(250 * player.animation_mov(8, 0)[0], 250 * player.animation_mov(8, 0)[1]
+            #                                , 250,250)
+            # else:
+            #     if jump:
+            #         sprite = player_fall.get_sprite(250 * player.animation_mov(2, 0)[0],
+            #                                        250 * player.animation_mov(2, 0)[1]
+            #                                        , 250, 250)
+            #
+            #     elif direction_right:
+            #         sprite = player_run.get_sprite(250 * player.animation_mov(8, 0)[0],
+            #                                        250 * player.animation_mov(8, 0)[1]
+            #                                        , 250, 250)
+            #     else:
+            #         sprite = player_run.get_sprite(250 * player.animation_mov(8, 0)[0],
+            #                                        250 * player.animation_mov(8, 0)[1]
+            #                                        , 250, 250)
+            #         sprite = pygame.transform.flip(sprite, True, False)
+
+            sprite_rect = sprite.get_rect(center=(screen_width/2, 0))
+            floor = screen_height - 180
+            sprite_rect.y = floor + player_gravity
+            screen.blit(sprite, sprite_rect)
+
+
+            # Gravity
+            if sprite_rect.y > floor:
+                sprite_rect.y = floor
+                if animation == 'jump':
+                    animation = 'idle'
+            else:
+                player_gravity += 3
 
 
             pygame.display.update()
