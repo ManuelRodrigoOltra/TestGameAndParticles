@@ -22,8 +22,11 @@ if __name__ == '__main__':
     game_active = True
     # idle = True
     player_gravity = 0
-    direction_right = False
+    direction_player_right = True
     animation = 'idle'
+    jump_up = True
+    jump_height = 80
+    jump_acceleration = 0
 
 
     sky_surface = pygame.image.load('assets/characters/Background/sky.png').convert()
@@ -32,7 +35,11 @@ if __name__ == '__main__':
     player = SpriteSheet('assets/characters/EVil Wizard 2/Sprites/Idle.png')
     player_run = SpriteSheet('assets/characters/EVil Wizard 2/Sprites/Run.png')
     player_fall = SpriteSheet('assets/characters/EVil Wizard 2/Sprites/Fall.png')
+    player_jump = SpriteSheet('assets/characters/EVil Wizard 2/Sprites/Jump.png')
 
+    sprite = player.get_sprite(250 * player.animation_mov(8, 0)[0], 250 * player.animation_mov(8, 0)[1]
+                               , 250, 250)
+    sprite_rect = sprite.get_rect(midbottom=(screen_width / 2, 0))
     floor = screen_height - 180
 
     while True:
@@ -54,30 +61,30 @@ if __name__ == '__main__':
 
                     if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
                         # Move right
-                        animation = 'move_right'
-                        direction_right = True
-
-
+                        if sprite_rect.y == floor:
+                            animation = 'move_right'
+                            direction_player_right = True
 
                     if event.key == pygame.K_a or event.key == pygame.K_LEFT:
                         # Move left
-                        animation = 'move_left'
-                        direction_right = False
+                        if sprite_rect.y == floor:
+                            animation = 'move_left'
+                            direction_player_right = False
 
                     # if (event.key == pygame.K_w or event.key == pygame.K_UP) and sprite_rect.y == floor:
                     if (event.key == pygame.K_w or event.key == pygame.K_UP):
-                        animation = 'jump'
-                        player_gravity -= 120
-
+                        if sprite_rect.y == floor:
+                            animation = 'jump'
+                            jump_up = True
 
                     if event.key == pygame.K_f :
                         pass
 
-
                 if event.type == pygame.KEYUP:
                         if animation == 'move_right' or animation == 'move_left':
-                            animation = 'idle'
-                        direction = (0, 0)
+                            if sprite_rect.y == floor:
+                                animation = 'idle'
+                                direction = (0, 0)
 
             else:
 
@@ -92,7 +99,10 @@ if __name__ == '__main__':
 
             if animation =='idle':
                 sprite = player.get_sprite(250 * player.animation_mov(8, 0)[0], 250 * player.animation_mov(8, 0)[1]
-                                           , 250,250)
+                                            , 250,250)
+                if not direction_player_right:
+                    sprite = pygame.transform.flip(sprite, True, False)
+
             elif animation == 'move_right':
                 sprite = player_run.get_sprite(250 * player.animation_mov(8, 0)[0],
                                                250 * player.animation_mov(8, 0)[1]
@@ -104,13 +114,34 @@ if __name__ == '__main__':
                 sprite = pygame.transform.flip(sprite, True, False)
 
             elif animation == 'jump':
-                sprite = player_fall.get_sprite(250 * player.animation_mov(2, 0)[0],
+
+                if jump_up:
+                    jump_acceleration -= 3
+                    player_gravity = 0
+                    sprite = player_jump.get_sprite(250 * player.animation_mov(2, 0)[0],
+                                                    250 * player.animation_mov(2, 0)[1]
+                                                    , 250, 250)
+                    if not direction_player_right:
+                        sprite = pygame.transform.flip(sprite, True, False)
+
+                else:
+                    # jump_acceleration = jump_height
+                    player_gravity += 2
+
+                    sprite = player_fall.get_sprite(250 * player.animation_mov(2, 0)[0],
                                                 250 * player.animation_mov(2, 0)[1]
                                                 , 250, 250)
+
+
+                    if not direction_player_right:
+                        sprite = pygame.transform.flip(sprite, True, False)
+
             else:
                 sprite = player.get_sprite(250 * player.animation_mov(8, 0)[0], 250 * player.animation_mov(8, 0)[1]
                                            , 250,250)
                 animation = 'idle'
+                if not direction_player_right:
+                    sprite = pygame.transform.flip(sprite, True, False)
 
 
 
@@ -143,20 +174,33 @@ if __name__ == '__main__':
             #                                        , 250, 250)
             #         sprite = pygame.transform.flip(sprite, True, False)
 
-            sprite_rect = sprite.get_rect(center=(screen_width/2, 0))
-            floor = screen_height - 180
-            sprite_rect.y = floor + player_gravity
-            screen.blit(sprite, sprite_rect)
 
+
+
+
+            floor = screen_height - 180
+            sprite_rect.y = floor + player_gravity + jump_acceleration
+            screen.blit(sprite, sprite_rect)
 
             # Gravity
             if sprite_rect.y > floor:
                 sprite_rect.y = floor
+                jump_acceleration = 0
+                player_gravity = 0
                 if animation == 'jump':
                     animation = 'idle'
-            else:
-                player_gravity += 3
 
+            # else:
+            #     player_gravity += 0
+
+            if sprite_rect.y < floor - jump_height:
+                jump_up = False
+
+
+
+
+            # print('acceleration: ' + jump_acceleration)
+            # print('gravity')
 
             pygame.display.update()
             clock.tick(60)
