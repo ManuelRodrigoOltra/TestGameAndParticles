@@ -71,6 +71,7 @@ if __name__ == '__main__':
                          'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0001_8.png',
                          'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0000_9.png']
 
+
     speed_scroll_layer = [0.05, 0.08, 0.2, 0.3, 0.4, 0.4, 0.5, 0.6, 0.6, 0.8, 1]
 
     back_gorund = BackGroundScroll(back_ground_imges, screen_width,screen_height, speed_scroll_layer)
@@ -136,18 +137,10 @@ if __name__ == '__main__':
 
 
         if game_active:
-            # screen.blit(sky_surface, (sky_box.x-screen_width, sky_box.y))
-            # screen.blit(sky_surface,sky_box)
-            # screen.blit(sky_surface, (sky_box.x+screen_width, sky_box.y))
-            # sky_box.x += move_background[0]
-            # sky_box.y += move_background[1]
+
             back_gorund.scroll_x += move_background[0]
             back_gorund.scroll_y += move_background[1]
             back_gorund.draw(screen)
-
-
-            # if sky_box.x > screen_width or sky_box.x < -screen_width:
-            #     sky_box.x = 0
 
             sprite = player.get_animation(animation, 250, 250)
 
