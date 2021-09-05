@@ -5,8 +5,9 @@
 
 import pygame
 from sys import exit
-from drawer.sprites import AnimatedPlayer, BackGroundScroll
+from drawer.sprites import AnimatedPlayer, BackGroundScroll, BackGroundFile
 from random import randint
+from common.utils import FPSCounter
 
 
 
@@ -14,9 +15,23 @@ from random import randint
 def key_conditions():
     pass
 
+
+file = [0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,
+        0,1,1,1,1,1,0,0,0,0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 1, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0,0,0,0,0,0,0,0,0,0]
+
+
+
 if __name__ == '__main__':
     pygame.init()
-    screen_width, screen_height = 928, 793
+    screen_width, screen_height = 460, 540
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption('FistPyGame')
     clock = pygame.time.Clock()
@@ -25,8 +40,9 @@ if __name__ == '__main__':
     player_gravity = 0
     direction_player_right = True
     animation = 'idle'
-    player_attack_speed = 0.5
+    player_attack_speed = 0.6
     attack_animation = 0
+    move_speed = 5
 
     key_state = pygame.key.get_pressed()
     key_state_previous = pygame.key.get_pressed()
@@ -35,20 +51,18 @@ if __name__ == '__main__':
 
     #Esto es un apanyo temporal
     moving = False
-
     move_background = (0, 0)
+    floor = screen_height - 100
 
-    floor = screen_height - 380
+    ground_surface = pygame.image.load('assets/scenes/my assets/ground block 2.png')
+    ground_box = ground_surface.get_rect(center = (0, 0))
+
+    font = pygame.font.Font(None, 36)
+    green = [255, 255, 255]
+    fps_counter = FPSCounter(screen, font, clock, green, (150, 10))
 
 
-    # sky_surface = pygame.image.load('assets/characters/Background/sky.png').convert()
-    # sky_box = sky_surface.get_rect(center = (screen_width/2, screen_height/2))
-
-
-
-
-
-    animation_files = {'idle':'assets/characters/EVil Wizard 2/Sprites/Idle.png',
+    animation_files_player = {'idle':'assets/characters/EVil Wizard 2/Sprites/Idle.png',
                        'right':'assets/characters/EVil Wizard 2/Sprites/Run.png',
                        'left': 'assets/characters/EVil Wizard 2/Sprites/Run.png',
                        'fall':'assets/characters/EVil Wizard 2/Sprites/Fall.png',
@@ -56,6 +70,17 @@ if __name__ == '__main__':
                        'attack': 'assets/characters/EVil Wizard 2/Sprites/Attack1.png',
                        'hit': 'assets/characters/EVil Wizard 2/Sprites/Take hit.png',
                        'death': 'assets/characters/EVil Wizard 2/Sprites/Death.png',
+                       'down': None,
+                       }
+
+    animation_files_enemy = {'idle':'assets/characters/Martial Hero 2/Sprites/Idle.png',
+                       'right':'assets/characters/Martial Hero 2/Sprites/Run.png',
+                       'left': 'assets/characters/Martial Hero 2/Sprites/Run.png',
+                       'fall':'assets/characters/Martial Hero 2/Sprites/Fall.png',
+                       'jump':'assets/characters/Martial Hero 2/Sprites/Jump.png',
+                       'attack': 'assets/characters/Martial Hero 2/Sprites/Attack1.png',
+                       'hit': 'assets/characters/Martial Hero 2/Sprites/Take hit.png',
+                       'death': 'assets/characters/Martial Hero 2/Sprites/Death.png',
                        'down': None,
                        }
 
@@ -71,78 +96,106 @@ if __name__ == '__main__':
                          'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0001_8.png',
                          'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0000_9.png']
 
+    file_bg_images = ['assets\scenes\Block\Tiles.png']
 
     speed_scroll_layer = [0.05, 0.08, 0.2, 0.3, 0.4, 0.4, 0.5, 0.6, 0.6, 0.8, 1]
 
-    back_gorund = BackGroundScroll(back_ground_imges, screen_width,screen_height, speed_scroll_layer)
+    # back_gorund = BackGroundScroll(back_ground_imges, screen_width,screen_height, speed_scroll_layer)
+    back_ground = BackGroundFile(file_bg_images, file)
+    player = AnimatedPlayer(animation_files_player)
+    player.move_speed = move_speed
 
+    enemy1 = AnimatedPlayer(animation_files_enemy)
 
-    player = AnimatedPlayer(animation_files)
-    sprite = player.get_animation(animation, 250, 250)
-
-    player.x = (screen_width / 2) - 125 #125 es por la mitad de los 250 que mide la imagen
+    player.x = (screen_width / 2)
     player.y = floor
+    player.speed_animation = (0.3, 0)
 
+    enemy1.x = 2000
+    enemy1.y = floor +200
+
+
+
+########################################################################################################################
+    ########################  BUCLE PRINCIPAL ########################
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
 
+            ######################## ENTRADAS TECLADO ########################
             if game_active:
-                if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-                    key_state_previous = key_state
+
+                if event.type == pygame.KEYDOWN:
                     key_state = pygame.key.get_pressed()
-                if not key_state_previous == key_state:
-                    if key_state[pygame.K_SPACE] and (animation is not 'jump' and animation is not 'fall'):
+
+                    if event.key == pygame.K_SPACE and (animation is not 'jump' and animation is not 'fall'):
                         animation = 'attack'
-                    elif key_state[pygame.K_s] or key_state[pygame.K_DOWN]:
+                    if event.key == pygame.K_s or event.key == pygame.K_DOWN:
                         pass
-                    elif key_state[pygame.K_d] or key_state[pygame.K_RIGHT]:
+                    if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
                         # MOVE RIGHT
-                        move_background = (-3, move_background[1])
+                        print('dfasdf')
+                        move_background = (-1 * move_speed, move_background[1])
                         player.right = True
                         player.left = False
                         if player.y == floor:
                             animation = 'right'
-                        if key_state[pygame.K_w] or key_state[pygame.K_UP]:
+                        if (key_state[pygame.K_w] or key_state[pygame.K_UP]) and player.y == floor:
                             animation = 'jump'
-                    elif key_state[pygame.K_a] or key_state[pygame.K_LEFT]:
+                    if event.key == pygame.K_a or event.key == pygame.K_LEFT:
                         # MOVE LEFT
-                        move_background = (+3, move_background[1])
+                        move_background = (move_speed, move_background[1])
                         player.right = False
                         player.left = True
                         if player.y == floor:
                             animation = 'left'
-                        if key_state[pygame.K_w] or key_state[pygame.K_UP]:
+                        if (key_state[pygame.K_w] or key_state[pygame.K_UP]) and player.y == floor:
                             animation = 'jump'
-                    elif key_state[pygame.K_w] or key_state[pygame.K_UP]:
+                    if event.key == pygame.K_w or event.key == pygame.K_UP:
                         if player.y == floor:
                             animation = 'jump'
-                    elif key_state[pygame.K_f] :
-                        if animation_files['attack'] == 'assets/characters/EVil Wizard 2/Sprites/Attack1.png':
-                            animation_files['attack'] = 'assets/characters/EVil Wizard 2/Sprites/Attack2.png'
+
+                    if key_state[pygame.K_f] :
+                        if animation_files_player['attack'] == 'assets/characters/EVil Wizard 2/Sprites/Attack1.png':
+                            animation_files_player['attack'] = 'assets/characters/EVil Wizard 2/Sprites/Attack2.png'
                         else:
-                            animation_files['attack'] = 'assets/characters/EVil Wizard 2/Sprites/Attack1.png'
-                        player.animation_files = animation_files
+                            animation_files_player['attack'] = 'assets/characters/EVil Wizard 2/Sprites/Attack1.png'
+                        player.animation_files = animation_files_player
+
                     else:
                         if player.y < floor:
                             animation = 'fall'
                         else:
-                            animation = 'idle'
+                            # animation = 'idle'
+                            pass
                         move_background = (0,0)
+
+                    if event.type == pygame.KEYUP:
+                        key_state = pygame.key.get_pressed()
+                        if event.key == pygame.K_SPACE and (player.y == floor):
+                            if key_state[pygame.K_RIGHT] or key_state[pygame.K_d]:
+                                animation = 'right'
+                                player.right = True
+                                player.left = False
+                            if key_state[pygame.K_LEFT] or key_state[pygame.K_a]:
+                                animation = 'left'
+                                player.right = False
+                                player.left = True
+
             else:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                         game_active = True
 
 
+        ######################## PASAMOS AL JUEGO ########################
         if game_active:
 
-            back_gorund.scroll_x += move_background[0]
-            back_gorund.scroll_y += move_background[1]
-            back_gorund.draw(screen)
-
-            sprite = player.get_animation(animation, 250, 250)
+            # back_gorund.scroll_x += move_background[0]
+            # back_gorund.scroll_y += move_background[1]
+            # back_gorund.draw(screen)
+            back_ground.draw(screen, screen_width/10, screen_height/10)
 
             if animation =='idle':
                 move_background = (0, 0)
@@ -179,19 +232,18 @@ if __name__ == '__main__':
             else:
                 animation = 'idle'
                 move_background = (0, 0)
-                if not direction_player_right:
-                    sprite = pygame.transform.flip(sprite, True, False)
+                player.left = True
+                player.right = False
 
-            #TODO revisar este floor
-            floor = screen_height - 225
+
+
             player.y = floor + player_gravity
-            screen.blit(sprite, (player.x,player.y,250,250))
 
-            key_state = pygame.key.get_pressed()
+            # sprite_enemy1 = enemy1.get_animation(animation, 200, 200)
+            # screen.blit(sprite_enemy1, (screen_width/2,screen_height/2,200,200))
 
             # Gravity
             # Logic after landing
-
             if player.y > floor:
                 player.y = floor
                 jump_acceleration = 0
@@ -210,6 +262,8 @@ if __name__ == '__main__':
             if player.y < floor - jump_height:
                 animation = 'fall'
 
+
+
             if key_state is not None:
                 if player.y == floor:
                     if animation == 'right' and not(key_state[pygame.K_d] or key_state[pygame.K_RIGHT]):
@@ -223,5 +277,10 @@ if __name__ == '__main__':
                         move_background = (0, 0)
 
 
+
+            player.draw(screen,animation, 250,250, player.x, player.y)
+
+            fps_counter.render()
+            fps_counter.update()
             pygame.display.update()
             clock.tick(60)
