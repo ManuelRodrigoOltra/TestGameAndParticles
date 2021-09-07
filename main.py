@@ -16,22 +16,54 @@ def key_conditions():
     pass
 
 
-file = [0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,0,0,
-        0,1,1,1,1,1,0,0,0,0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 1, 1, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0,0,0,0,0,0,0,0,0,0]
+scene1 = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
+
+
+def move (rect, movement, tiles):
+    collision_type = {'top': False, 'bottom': False, 'left': False, 'right': False}
+    rect.x += movement[0]
+    hit_list = collision_test(rect, tiles)
+    for tile in hit_list:
+        if movement[0] > 0:
+            rect.right = tile.left
+            collision_type['rigth'] = True
+        if movement[0] < 0:
+            rect.left = tile.right
+            collision_type['left'] = True
+
+    rect.y += movement[1]
+    hit_list = collision_test(rect, tiles)
+    for tile in hit_list:
+        if movement[1] > 0:
+            rect.bottom = tile.top
+            collision_type['bottom'] = True
+        if movement[1] < 0:
+            rect.top = tile.bottom
+            collision_type['top'] = True
+    return rect, collision_type
+
+
+def collision_test(rect, tiles):
+    hit_list = []
+    for tile in tiles:
+        if rect.colliderect(tile):
+            hit_list.append(tile)
+    return hit_list
 
 
 if __name__ == '__main__':
     pygame.init()
-    screen_width, screen_height = 460, 540
+    screen_width, screen_height = 600, 800
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption('FistPyGame')
     clock = pygame.time.Clock()
@@ -43,16 +75,20 @@ if __name__ == '__main__':
     player_attack_speed = 0.6
     attack_animation = 0
     move_speed = 5
+    air_timer = 0
+
+
+    moving_right = False
+    moving_left = False
 
     key_state = pygame.key.get_pressed()
-    key_state_previous = pygame.key.get_pressed()
 
     jump_height = 80
 
     #Esto es un apanyo temporal
     moving = False
     move_background = (0, 0)
-    floor = screen_height - 100
+
 
     ground_surface = pygame.image.load('assets/scenes/my assets/ground block 2.png')
     ground_box = ground_surface.get_rect(center = (0, 0))
@@ -73,52 +109,27 @@ if __name__ == '__main__':
                        'down': None,
                        }
 
-    animation_files_enemy = {'idle':'assets/characters/Martial Hero 2/Sprites/Idle.png',
-                       'right':'assets/characters/Martial Hero 2/Sprites/Run.png',
-                       'left': 'assets/characters/Martial Hero 2/Sprites/Run.png',
-                       'fall':'assets/characters/Martial Hero 2/Sprites/Fall.png',
-                       'jump':'assets/characters/Martial Hero 2/Sprites/Jump.png',
-                       'attack': 'assets/characters/Martial Hero 2/Sprites/Attack1.png',
-                       'hit': 'assets/characters/Martial Hero 2/Sprites/Take hit.png',
-                       'death': 'assets/characters/Martial Hero 2/Sprites/Death.png',
-                       'down': None,
-                       }
+    tiles_surface = pygame.image.load('assets\scenes\Block\Tiles.png')
+    tiles_rect = tiles_surface.get_rect()
 
-    back_ground_imges = ['assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0010_1.png',
-                         'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0009_2.png',
-                         'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0008_3.png',
-                         'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0007_Lights.png',
-                         'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0006_4.png',
-                         'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0005_5.png',
-                         'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0004_Lights.png',
-                         'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0003_6.png',
-                         'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0002_7.png',
-                         'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0001_8.png',
-                         'assets/scenes/Free Pixel Art Forest/PNG/Background layers/Layer_0000_9.png']
 
-    file_bg_images = ['assets\scenes\Block\Tiles.png']
-
-    speed_scroll_layer = [0.05, 0.08, 0.2, 0.3, 0.4, 0.4, 0.5, 0.6, 0.6, 0.8, 1]
-
-    # back_gorund = BackGroundScroll(back_ground_imges, screen_width,screen_height, speed_scroll_layer)
-    back_ground = BackGroundFile(file_bg_images, file)
     player = AnimatedPlayer(animation_files_player)
     player.move_speed = move_speed
 
-    enemy1 = AnimatedPlayer(animation_files_enemy)
-
     player.x = (screen_width / 2)
-    player.y = floor
+    player.y = (screen_height/2)
     player.speed_animation = (0.3, 0)
-
-    enemy1.x = 2000
-    enemy1.y = floor +200
+    player_movement = [0, 0]
 
 
+    screen.fill((146, 244, 255))
 
 ########################################################################################################################
     ########################  BUCLE PRINCIPAL ########################
     while True:
+
+
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -136,26 +147,15 @@ if __name__ == '__main__':
                         pass
                     if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
                         # MOVE RIGHT
-                        print('dfasdf')
                         move_background = (-1 * move_speed, move_background[1])
                         player.right = True
                         player.left = False
-                        if player.y == floor:
-                            animation = 'right'
-                        if (key_state[pygame.K_w] or key_state[pygame.K_UP]) and player.y == floor:
-                            animation = 'jump'
+
                     if event.key == pygame.K_a or event.key == pygame.K_LEFT:
                         # MOVE LEFT
                         move_background = (move_speed, move_background[1])
                         player.right = False
                         player.left = True
-                        if player.y == floor:
-                            animation = 'left'
-                        if (key_state[pygame.K_w] or key_state[pygame.K_UP]) and player.y == floor:
-                            animation = 'jump'
-                    if event.key == pygame.K_w or event.key == pygame.K_UP:
-                        if player.y == floor:
-                            animation = 'jump'
 
                     if key_state[pygame.K_f] :
                         if animation_files_player['attack'] == 'assets/characters/EVil Wizard 2/Sprites/Attack1.png':
@@ -164,25 +164,9 @@ if __name__ == '__main__':
                             animation_files_player['attack'] = 'assets/characters/EVil Wizard 2/Sprites/Attack1.png'
                         player.animation_files = animation_files_player
 
-                    else:
-                        if player.y < floor:
-                            animation = 'fall'
-                        else:
-                            # animation = 'idle'
-                            pass
-                        move_background = (0,0)
 
                     if event.type == pygame.KEYUP:
                         key_state = pygame.key.get_pressed()
-                        if event.key == pygame.K_SPACE and (player.y == floor):
-                            if key_state[pygame.K_RIGHT] or key_state[pygame.K_d]:
-                                animation = 'right'
-                                player.right = True
-                                player.left = False
-                            if key_state[pygame.K_LEFT] or key_state[pygame.K_a]:
-                                animation = 'left'
-                                player.right = False
-                                player.left = True
 
             else:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
@@ -192,13 +176,50 @@ if __name__ == '__main__':
         ######################## PASAMOS AL JUEGO ########################
         if game_active:
 
-            # back_gorund.scroll_x += move_background[0]
-            # back_gorund.scroll_y += move_background[1]
-            # back_gorund.draw(screen)
-            back_ground.draw(screen, screen_width/10, screen_height/10)
 
+            #Pintamos el escenario
+            tile_rects = []
+            y = 0
+            tiles_width = tiles_rect.width
+            tiles_height = tiles_rect.height
+            for row in scene1:
+                x = 0
+                for col in row:
+                    if scene1[y][x] == 1:
+                        screen.blit(tiles_surface, (tiles_rect.x + tiles_width * x, tiles_rect.y + tiles_height * y, tiles_width, tiles_height))
+                        tile_rects.append(pygame.Rect(tiles_rect.x + tiles_width * x,tiles_rect.y + tiles_height * y, tiles_width, tiles_height))
+                    x += 1
+                y += 1
+
+
+
+            if moving_right == True:
+                player_movement[0] += 2
+            if moving_left == True:
+                player_movement[0] -= 2
+
+            player_movement[1] += player_gravity
+            player_gravity += 0.2
+            if player_gravity > 3:
+                player_gravity = 3
+
+            player.x = player_movement[0]
+            player.y = player_movement[1]
+
+            player_rect = pygame.Rect(player.x, player.y, 250, 250)
+            player_rect, collisions = move(player_rect, player_movement, tile_rects)
+
+
+            if collisions['bottom'] == True:
+                air_timer = 0
+                player_gravity = 0
+            else:
+                air_timer += 1
+
+            # screen.blit(player.get_animation(animation, 250,250), player_rect)
             if animation =='idle':
-                move_background = (0, 0)
+                pass
+                #move_background = (0, 0)
 
             elif animation == 'jump':
                 player_gravity -= 3
@@ -237,48 +258,7 @@ if __name__ == '__main__':
 
 
 
-            player.y = floor + player_gravity
-
-            # sprite_enemy1 = enemy1.get_animation(animation, 200, 200)
-            # screen.blit(sprite_enemy1, (screen_width/2,screen_height/2,200,200))
-
-            # Gravity
-            # Logic after landing
-            if player.y > floor:
-                player.y = floor
-                jump_acceleration = 0
-                player_gravity = 0
-                if animation == 'jump' or animation == 'fall':
-                    if key_state[pygame.K_a] or key_state[pygame.K_LEFT]:
-                        animation = 'left'
-                        direction_player_right = False
-                    elif key_state[pygame.K_d] or key_state[pygame.K_RIGHT]:
-                        animation = 'right'
-                        direction_player_right = True
-                    else:
-                        animation = 'idle'
-                        move_background = (0, 0)
-
-            if player.y < floor - jump_height:
-                animation = 'fall'
-
-
-
-            if key_state is not None:
-                if player.y == floor:
-                    if animation == 'right' and not(key_state[pygame.K_d] or key_state[pygame.K_RIGHT]):
-                        print('fasdf')
-                        animation = 'idle'
-                        direction_player_right = True
-                        move_background = (0, 0)
-                    if animation == 'left' and not(key_state[pygame.K_a] or key_state[pygame.K_LEFT]):
-                        animation = 'idle'
-                        direction_player_right = False
-                        move_background = (0, 0)
-
-
-
-            player.draw(screen,animation, 250,250, player.x, player.y)
+            player.draw(screen,animation, 250,250)
 
             fps_counter.render()
             fps_counter.update()
