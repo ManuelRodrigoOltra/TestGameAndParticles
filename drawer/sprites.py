@@ -28,6 +28,7 @@ class AnimatedPlayer(BasicPlayer):
         self.speed_animation = (0.6, 0)
 
         self.animation = None
+        self.animation_active = False
 
         self.x = 0
         self.y = 0
@@ -44,26 +45,29 @@ class AnimatedPlayer(BasicPlayer):
         self.height_sprite_animation = sprite_animation.get_height()
         return sprite_animation
 
-    def get_animation(self,animation, width_sprite, height_sprite):
 
-        sprite = pygame.Surface([width_sprite, height_sprite])
+    def get_animation(self,animation, width_sprite, height_sprite):
+        sprite = pygame.Surface((width_sprite, height_sprite))
         sprite.set_colorkey((0, 0, 0))
         if not self.animation == animation:
             sprite_animation = self.load_sheets(self.animation_files[animation])
 
-        animation_frame = self.animation_itera (self.width_sprite_animation/width_sprite,
+        animation_frame = self.animation_itera(self.width_sprite_animation/width_sprite,
                                                 self.height_sprite_animation/height_sprite)
-        sprite.blit(sprite_animation,(width_sprite * animation_frame[0], height_sprite * animation_frame[1],
+        sprite.blit(sprite_animation,(0,0),(width_sprite * int(animation_frame[0]), height_sprite * int(animation_frame[1]),
                                               width_sprite, height_sprite))
         if not self.right:
             sprite = pygame.transform.flip(sprite, True, False)
         return sprite
 
-    def draw (self, win, animation, width_sprite, height_sprite):
-        sprite = self.get_animation(animation, width_sprite, height_sprite)
-        #TODO pensar como pasarle una posición generica y no un centro
-        # sprite_box = sprite.get_rect(self.x, self.y, width_sprite, height_sprite)
-        win.blit(sprite, (self.x, self.y, width_sprite, height_sprite))
+
+    # def draw (self, win, animation, width_sprite, height_sprite):
+    #     sprite = self.get_animation(animation, width_sprite, height_sprite)
+    #     #TODO pensar como pasarle una posición generica y no un centro
+    #     # sprite_box = sprite.get_rect(self.x, self.y, width_sprite, height_sprite)
+    #     sprite_box = pygame.Rect(self.x, self.y, width_sprite, height_sprite)
+    #     # win.blit(sprite, (self.x, self.y, width_sprite, height_sprite))
+    #     win.blit(sprite, sprite_box)
 
     def animation_itera(self, n_images_sheet_x, n_images_sheet_y):
         self.control_animation_x = self.control_animation_x + self.speed_animation[0]
@@ -75,7 +79,7 @@ class AnimatedPlayer(BasicPlayer):
         if self.control_animation_y > n_images_sheet_y:
             self.control_animation_y = 0
 
-        return self.control_animation_x // 1, self.control_animation_y // 1
+        return int(self.control_animation_x), int(self.control_animation_y)
 
 
 class BackGround:
