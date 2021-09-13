@@ -54,8 +54,9 @@ class AnimatedPlayer(BasicPlayer):
 
         animation_frame = self.animation_itera(self.width_sprite_animation/width_sprite,
                                                 self.height_sprite_animation/height_sprite)
-        sprite.blit(sprite_animation,(0,0),(width_sprite * int(animation_frame[0]), height_sprite * int(animation_frame[1]),
-                                              width_sprite, height_sprite))
+        sprite.blit(sprite_animation,(0,0),(width_sprite * int(animation_frame[0])+109, height_sprite * int(animation_frame[1]) + 68,
+                                              68, 105))
+        print((width_sprite * int(animation_frame[0])+109, height_sprite * int(animation_frame[1])))
         if not self.right:
             sprite = pygame.transform.flip(sprite, True, False)
         return sprite
