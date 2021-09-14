@@ -25,7 +25,7 @@ def load_map(path):
 def move (rect, movement, tiles):
     collision_type = {'top': False, 'bottom': False, 'left': False, 'right': False}
     rect.x += movement[0]
-    hit_list = collision_test(rect, tiles)
+    hit_list = collision_test(rect, tiles, 1)
 
     for tile in hit_list:
         if movement[0] > 0:
@@ -35,7 +35,7 @@ def move (rect, movement, tiles):
             rect.left = tile.right
             collision_type['left'] = True
     rect.y += movement[1]
-    hit_list = collision_test(rect, tiles)
+    hit_list = collision_test(rect, tiles, 1.5)
     for tile in hit_list:
         if movement[1] > 0:
             rect.bottom = tile.top
@@ -47,13 +47,15 @@ def move (rect, movement, tiles):
     return rect, collision_type
 
 
-def collision_test(rect, tiles):
+def collision_test(rect, tiles, shrink_rect):
     hit_list = []
-    newRec = pygame.Rect(rect.x, rect.y, rect.width/2, rect.height)
+    newRec = pygame.Rect(rect.x, rect.y, rect.width/shrink_rect, rect.height)
     for tile in tiles:
         if newRec.colliderect(tile):
             hit_list.append(tile)
     return hit_list
+
+
 
 
 if __name__ == '__main__':
@@ -97,7 +99,6 @@ if __name__ == '__main__':
     font = pygame.font.Font(None, 36)
     green = [255, 255, 255]
     fps_counter = FPSCounter(screen, font, clock, green, (150, 10))
-
 
     # animation_files_player = {'idle':'assets/characters/EVil Wizard 2/Sprites/Idle.png',
     #                    'right':'assets/characters/EVil Wizard 2/Sprites/Run.png',
@@ -143,7 +144,6 @@ if __name__ == '__main__':
 
             ######################## ENTRADAS TECLADO ########################
             if game_active:
-
                 if event.type == pygame.KEYDOWN:
                     key_state = pygame.key.get_pressed()
 
@@ -157,6 +157,11 @@ if __name__ == '__main__':
                         moving_right = True
                         moving_left = False
 
+                    if event.key == pygame.K_w or event.key == pygame.K_UP:
+                        # MOVE RIGHT
+                        if air_timer < 30 and not (collisions['bottom'] or collisions['top']):
+                            animation = 'jump'
+                            vertical_momentum += -5
 
                     if event.key == pygame.K_a or event.key == pygame.K_LEFT:
                         # MOVE LEFT
@@ -207,8 +212,15 @@ if __name__ == '__main__':
                 x = 0
                 for col in row:
                     if game_map[y][x] == str(1):
-                        screen.blit(tiles_surface, ((tiles_rect.x + tiles_width * x) - scroll[0], (tiles_rect.y + tiles_height * y) - scroll[1]))
-                        tile_rects.append(pygame.Rect(tiles_rect.x + tiles_width * x,tiles_rect.y + tiles_height * y, tiles_width, tiles_height))
+                        pos_tiles_x = (tiles_rect.x + tiles_width * x) - scroll[0]
+                        pos_tiles_y = (tiles_rect.y + tiles_height * y) - scroll[1]
+                        # pos_tiles_x = player_rect.x - scroll[0]
+                        # pos_tiles_y = player_rect.y - scroll[1]
+                        tiles_show_x = pos_tiles_x > scroll[0] - screen_width/2 and pos_tiles_x < scroll[0] + screen_width/2
+                        tiles_show_y = pos_tiles_y > scroll[1] - screen_height/2 and pos_tiles_y < scroll[1] + screen_height/2
+                        if tiles_show_x and tiles_show_y:
+                            screen.blit(tiles_surface, (pos_tiles_x, pos_tiles_y))
+                            tile_rects.append(pygame.Rect(tiles_rect.x + tiles_width * x,tiles_rect.y + tiles_height * y, tiles_width, tiles_height))
                     x += 1
                 y += 1
 
@@ -222,8 +234,13 @@ if __name__ == '__main__':
             if collisions['bottom'] == True:
                 air_timer = 0
                 vertical_momentum = 0
+
+            elif collisions['top'] == True:
+                air_timer = 10000
+                vertical_momentum = 0
             else:
                 air_timer += 1
+
 
             vertical_momentum += 0.1
 
@@ -241,7 +258,6 @@ if __name__ == '__main__':
 
 
             screen.blit(player, (player_rect.x - scroll[0], player_rect.y - scroll[1]))
-
             player_rect, collisions = move(player_rect, player_movement, tile_rects)
 
 
