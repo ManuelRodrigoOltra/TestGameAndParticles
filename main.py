@@ -35,7 +35,7 @@ def move (rect, movement, tiles):
             rect.left = tile.right
             collision_type['left'] = True
     rect.y += movement[1]
-    hit_list = collision_test(rect, tiles, 1.5)
+    hit_list = collision_test(rect, tiles, 1)
     for tile in hit_list:
         if movement[1] > 0:
             rect.bottom = tile.top
@@ -66,6 +66,7 @@ if __name__ == '__main__':
 
     game_map = load_map('C:/Users/manue/PycharmProjects/FirstGamePyGame/assets/scenes/level1')
     screen_width, screen_height = 600, 800
+    # screen = pygame.display.set_mode((screen_width, screen_height))
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption('FistPyGame')
 
@@ -88,13 +89,14 @@ if __name__ == '__main__':
     key_state = pygame.key.get_pressed()
 
     jump_height = 80
+    player_speed = 3
 
     scroll = [0,0]
     true_scroll = [0,0]
 
+    background_objects = [[0.25,[120,10,70,400]],[0.25,[280,30,40,400]],[0.5,[30,40, 90, 200]]]
 
-    # ground_surface = pygame.image.load('assets/scenes/my assets/ground block 2.png')
-    # ground_box = ground_surface.get_rect(center = (0, 0))
+
 
     font = pygame.font.Font(None, 36)
     green = [255, 255, 255]
@@ -112,12 +114,24 @@ if __name__ == '__main__':
     #                    }
 
     player = pygame.image.load('assets/characters/Characters/character_0001.png')
-    player_rect = player.get_rect(center = (screen_width/2, 0))
+    player_rect = player.get_rect(center=(screen_width/2, 0))
+    player_rect = pygame.Rect(player_rect.center[0], player_rect.center[1], player_rect.width-5, player_rect.height)
     player_movement = [0, 0]
 
     # tiles_surface = pygame.image.load('assets\scenes\Block\Tiles.png')
     tiles_surface = pygame.image.load('assets\scenes\Block/Tile_1.png')
     tiles_rect = tiles_surface.get_rect()
+
+    tiles_1_surface = pygame.image.load('assets\scenes\Block/T1.png').convert_alpha()
+    tiles_1_rect = tiles_1_surface.get_rect()
+    tiles_1_rect.height = tiles_1_rect.height - 15
+
+
+    tiles_2_surface = pygame.image.load('assets\scenes\Block/Tiles_2.png').convert_alpha()
+    tiles_2_rect = tiles_1_surface.get_rect()
+
+    tree_1_surface = pygame.image.load('assets\scenes\Block/tree_1.png').convert_alpha()
+    tree_1_rect = tree_1_surface.get_rect()
 
     # player = AnimatedPlayer(animation_files_player)
     # player.move_speed = move_speed
@@ -130,8 +144,10 @@ if __name__ == '__main__':
     # player_movement = [0, 0]
 
     tiles_rects = []
-    tiles_width = tiles_rect.width
-    tiles_height = tiles_rect.height
+    tiles_width = 35
+    tiles_height = 35
+    # tiles_width = tiles_1_rect.width
+    # tiles_height = tiles_1_rect.height
 
 ########################################################################################################################
     ########################  BUCLE PRINCIPAL ########################
@@ -198,38 +214,69 @@ if __name__ == '__main__':
 
         ######################## PASAMOS AL JUEGO ########################
         if game_active:
-            true_scroll[0] += (player_rect.x - true_scroll[0] - screen_width/2)/20
-            true_scroll[1] += (player_rect.y - true_scroll[1] - screen_height/2)/20
+            true_scroll[0] += (player_rect.x - true_scroll[0] - screen_width/2)/15
+            true_scroll[1] += (player_rect.y - true_scroll[1] - screen_height/2)/15
             scroll = true_scroll.copy()
             scroll[0] = int(scroll[0])
             scroll[1] = int(scroll[1])
 
             screen.fill((146, 244, 255))
+
+
+            pygame.draw.rect(screen,(7,80,75), pygame.Rect(0,120,300,80))
+
+            for background_object in background_objects:
+                obj_rect = pygame.Rect(background_object[1][0] - scroll[0] * background_object[0],
+                                       background_object[1][1] - scroll[1] * background_object[0],
+                                       background_object[1][2],  background_object[1][3])
+                if background_object[0] == 0.5:
+                    pygame.draw.rect(screen,(14,222,150), obj_rect)
+                else:
+                    pygame.draw.rect(screen, (7, 80, 75), obj_rect)
+
+
             #Pintamos el escenario
             tile_rects = []
+            fill_screen = (screen_width/tiles_width + (player_rect.x - scroll[0])/tiles_width,
+                           screen_height/tiles_height + (player_rect.y - scroll[1])/tiles_height)
+            #fill_screen = (screen_width/tiles_width,screen_height/tiles_height )
+            pos_center_tiles = (player_rect.x/tiles_width,player_rect.y/tiles_height)
+
+            limits_width = (round(pos_center_tiles[0] + fill_screen[0]/2), round(pos_center_tiles[0] - fill_screen[0]/2))
+            limits_height = (round(pos_center_tiles[1] + fill_screen[1]/2),round(pos_center_tiles[1] - fill_screen[1]/2))
             y = 0
             for row in game_map:
                 x = 0
-                for col in row:
-                    if game_map[y][x] == str(1):
-                        pos_tiles_x = (tiles_rect.x + tiles_width * x) - scroll[0]
-                        pos_tiles_y = (tiles_rect.y + tiles_height * y) - scroll[1]
-                        # pos_tiles_x = player_rect.x - scroll[0]
-                        # pos_tiles_y = player_rect.y - scroll[1]
-                        tiles_show_x = pos_tiles_x > scroll[0] - screen_width/2 and pos_tiles_x < scroll[0] + screen_width/2
-                        tiles_show_y = pos_tiles_y > scroll[1] - screen_height/2 and pos_tiles_y < scroll[1] + screen_height/2
-                        if tiles_show_x and tiles_show_y:
-                            screen.blit(tiles_surface, (pos_tiles_x, pos_tiles_y))
-                            tile_rects.append(pygame.Rect(tiles_rect.x + tiles_width * x,tiles_rect.y + tiles_height * y, tiles_width, tiles_height))
-                    x += 1
-                y += 1
+                if limits_height[0] > y > limits_height[1]:
+                    for col in row:
+                        if limits_width[0] > x > limits_width[1]:
 
+
+                            if game_map[y][x] == str(1):
+                                pos_tiles_x = (tiles_1_rect.x + tiles_width * x) - scroll[0]
+                                pos_tiles_y = (tiles_1_rect.y + tiles_height * y) - scroll[1]
+                                tiles_show_x = abs(player_rect.x - scroll[0] - pos_tiles_x) < screen_width/2 + 5 * tiles_width
+                                tiles_show_y = abs(player_rect.y - scroll[1] - pos_tiles_y) < screen_height/2 + 5 * tiles_height
+                                if tiles_show_x and tiles_show_y:
+                                    screen.blit(tiles_1_surface, (pos_tiles_x, pos_tiles_y))
+                                    tile_rects.append(pygame.Rect(tiles_1_rect.x + tiles_width * x,tiles_1_rect.y + 5 + tiles_height * y, tiles_width, tiles_height-5))
+
+                            if game_map[y][x] == str(2):
+                                pos_tiles_x = (tiles_rect.x + tiles_width * x) - scroll[0]
+                                pos_tiles_y = (tiles_rect.y + tiles_height * y) - scroll[1]
+                                tiles_show_x = abs(player_rect.x - scroll[0] - pos_tiles_x) < screen_width/2 + 5 * tiles_width
+                                tiles_show_y = abs(player_rect.y - scroll[1] - pos_tiles_y) < screen_height/2 + 5 * tiles_height
+                                if tiles_show_x and tiles_show_y:
+                                    screen.blit(tree_1_surface, (pos_tiles_x, pos_tiles_y - tree_1_rect.height))
+                                    # tile_rects.append(pygame.Rect(tiles_rect.x + tiles_width * x,tiles_rect.y + tiles_height * y, tiles_width, tiles_height))
+                        x += 1
+                y += 1
 
             player_movement[0] = 0
             if moving_right == True:
-                player_movement[0] += 2
+                player_movement[0] += player_speed
             if moving_left == True:
-                player_movement[0] -= 2
+                player_movement[0] -= player_speed
 
             if collisions['bottom'] == True:
                 air_timer = 0
