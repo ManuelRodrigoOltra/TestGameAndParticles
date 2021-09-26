@@ -8,6 +8,7 @@ from sys import exit
 from drawer.sprites import AnimatedPlayer, BackGroundScroll, BackGroundFile
 from random import randint
 from common.utils import FPSCounter
+from particles.particles_generator import particles_basic
 
 
 def load_map(path):
@@ -25,7 +26,7 @@ def load_map(path):
 def move (rect, movement, tiles):
     collision_type = {'top': False, 'bottom': False, 'left': False, 'right': False}
     rect.x += movement[0]
-    hit_list = collision_test(rect, tiles, 1)
+    hit_list = collision_test(rect, tiles)
 
     for tile in hit_list:
         if movement[0] > 0:
@@ -35,7 +36,7 @@ def move (rect, movement, tiles):
             rect.left = tile.right
             collision_type['left'] = True
     rect.y += movement[1]
-    hit_list = collision_test(rect, tiles, 1)
+    hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0:
             rect.bottom = tile.top
@@ -47,11 +48,11 @@ def move (rect, movement, tiles):
     return rect, collision_type
 
 
-def collision_test(rect, tiles, shrink_rect):
+def collision_test(rect, tiles):
     hit_list = []
-    newRec = pygame.Rect(rect.x, rect.y, rect.width/shrink_rect, rect.height)
+    # newRec = pygame.Rect(rect.x, rect.y, rect.width, rect.height)
     for tile in tiles:
-        if newRec.colliderect(tile):
+        if rect.colliderect(tile):
             hit_list.append(tile)
     return hit_list
 
@@ -144,20 +145,24 @@ if __name__ == '__main__':
     # player_movement = [0, 0]
 
     tiles_rects = []
-    tiles_width = 35
-    tiles_height = 35
+    tiles_width = 34
+    tiles_height = 34
     # tiles_width = tiles_1_rect.width
     # tiles_height = tiles_1_rect.height
+
+
+    #particles----------------------------------------------------------------------------------------
+    #[loc, velocity, timer]
+    # particles = []
+    particles = particles_basic(screen)
 
 ########################################################################################################################
     ########################  BUCLE PRINCIPAL ########################
     while True:
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-
             ######################## ENTRADAS TECLADO ########################
             if game_active:
                 if event.type == pygame.KEYDOWN:
@@ -169,7 +174,8 @@ if __name__ == '__main__':
                         pass
                     if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
                         # MOVE RIGHT
-                        animation = 'right'
+                        if animation is not 'jump' and animation is not 'fall':
+                            animation = 'right'
                         moving_right = True
                         moving_left = False
 
@@ -181,9 +187,11 @@ if __name__ == '__main__':
 
                     if event.key == pygame.K_a or event.key == pygame.K_LEFT:
                         # MOVE LEFT
-                        animation = 'left'
+                        if animation is not 'jump' and animation is not 'fall':
+                            animation = 'left'
                         moving_right = False
                         moving_left = True
+
 
 
                     # if key_state[pygame.K_f] :
@@ -205,8 +213,6 @@ if __name__ == '__main__':
                         moving_left = False
                         moving_right = False
 
-
-
             else:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                         game_active = True
@@ -214,16 +220,17 @@ if __name__ == '__main__':
 
         ######################## PASAMOS AL JUEGO ########################
         if game_active:
+
+            if collisions['bottom'] and animation == 'jump':
+                animation = 'idle'
+
+
             true_scroll[0] += (player_rect.x - true_scroll[0] - screen_width/2)/15
             true_scroll[1] += (player_rect.y - true_scroll[1] - screen_height/2)/15
             scroll = true_scroll.copy()
             scroll[0] = int(scroll[0])
             scroll[1] = int(scroll[1])
-
             screen.fill((146, 244, 255))
-
-
-            pygame.draw.rect(screen,(7,80,75), pygame.Rect(0,120,300,80))
 
             for background_object in background_objects:
                 obj_rect = pygame.Rect(background_object[1][0] - scroll[0] * background_object[0],
@@ -233,6 +240,41 @@ if __name__ == '__main__':
                     pygame.draw.rect(screen,(14,222,150), obj_rect)
                 else:
                     pygame.draw.rect(screen, (7, 80, 75), obj_rect)
+
+
+
+
+
+            if animation == 'right' and player_movement[1]< 1.1:
+
+                p_pos = [player_rect.midbottom[0],
+                         player_rect.midbottom[1] + randint(0, 20) / 10 - 1]
+                p_mov = [-2, randint(0, 20) / 10 - 1]
+                p_size = randint(5,10)
+                particles.add_particle(p_pos, p_mov, p_size)
+                particles.itera_draw(screen, scroll)
+            elif animation == 'left' and player_movement[1] < 1.1:
+                p_pos = [player_rect.midbottom[0],
+                         player_rect.midbottom[1] + randint(0, 20) / 10 - 1]
+                p_mov = [+2, randint(0, 20) / 10 - 1]
+                p_size = randint(5, 10)
+                particles.add_particle(p_pos, p_mov, p_size)
+                particles.itera_draw(screen, scroll)
+            else:
+                particles.itera_draw(screen, scroll)
+
+
+
+            # for particle in particles:
+            #     particle[0][0] += particle[1][0]
+            #     particle[0][1] += particle[1][1]
+            #     particle[2] -= 0.1
+            #     pygame.draw.circle(screen, (255,255,255),particle[0], int(particle[2]))
+            #     if particle[2] < 0:
+            #         particles.remove(particle)
+
+
+
 
 
             #Pintamos el escenario
@@ -268,7 +310,6 @@ if __name__ == '__main__':
                                 tiles_show_y = abs(player_rect.y - scroll[1] - pos_tiles_y) < screen_height/2 + 5 * tiles_height
                                 if tiles_show_x and tiles_show_y:
                                     screen.blit(tree_1_surface, (pos_tiles_x, pos_tiles_y - tree_1_rect.height))
-                                    # tile_rects.append(pygame.Rect(tiles_rect.x + tiles_width * x,tiles_rect.y + tiles_height * y, tiles_width, tiles_height))
                         x += 1
                 y += 1
 
@@ -289,7 +330,8 @@ if __name__ == '__main__':
                 air_timer += 1
 
 
-            vertical_momentum += 0.1
+
+            vertical_momentum += 0.2
 
             if vertical_momentum > 6:
                 vertical_momentum = 6
@@ -306,10 +348,6 @@ if __name__ == '__main__':
 
             screen.blit(player, (player_rect.x - scroll[0], player_rect.y - scroll[1]))
             player_rect, collisions = move(player_rect, player_movement, tile_rects)
-
-
-
-
 
 
             fps_counter.render()
