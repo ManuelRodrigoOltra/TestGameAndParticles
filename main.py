@@ -263,17 +263,12 @@ if __name__ == '__main__':
             else:
                 particles.itera_draw(screen, scroll)
 
+            n_lines = 20
 
-
-            # for particle in particles:
-            #     particle[0][0] += particle[1][0]
-            #     particle[0][1] += particle[1][1]
-            #     particle[2] -= 0.1
-            #     pygame.draw.circle(screen, (255,255,255),particle[0], int(particle[2]))
-            #     if particle[2] < 0:
-            #         particles.remove(particle)
-
-
+            for line in range(n_lines):
+                offset = 100* (line - n_lines/2)
+                pygame.draw.line(screen, (50, 102, 14), (player_rect.x - scroll[0] - offset, player_rect.y - scroll[1] - (screen_height/2 + 200)),
+                                 (player_rect.x - scroll[0] - offset - 200, player_rect.y - scroll[1] + (screen_height/2 + 200)), 30)
 
 
 
@@ -340,9 +335,6 @@ if __name__ == '__main__':
                 vertical_momentum = 0
 
             player_movement[1] = vertical_momentum
-
-            # player_sprite = player.get_animation(animation, 250,250)
-            # screen.blit(player_sprite, player_rect)
 
 
 
