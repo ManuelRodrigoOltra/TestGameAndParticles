@@ -7,9 +7,11 @@ import pygame
 from sys import exit
 from drawer.sprites import AnimatedPlayer, BackGroundScroll, BackGroundFile
 from random import randint
-from common.utils import FPSCounter
+from common.utils import FPSCounter, debug
 from particles.particles_generator import particles_basic
 
+
+FPS = 60
 
 def load_map(path):
     map = []
@@ -97,6 +99,7 @@ if __name__ == '__main__':
 
     background_objects = [[0.25,[120,10,70,400]],[0.25,[280,30,40,400]],[0.5,[30,40, 90, 200]]]
 
+    n_frame = 0
 
 
     font = pygame.font.Font(None, 36)
@@ -221,9 +224,12 @@ if __name__ == '__main__':
         ######################## PASAMOS AL JUEGO ########################
         if game_active:
 
+            n_frame += 1
+            if n_frame > FPS+1:
+                n_frame = 0
+
             if collisions['bottom'] and animation == 'jump':
                 animation = 'idle'
-
 
             true_scroll[0] += (player_rect.x - true_scroll[0] - screen_width/2)/15
             true_scroll[1] += (player_rect.y - true_scroll[1] - screen_height/2)/15
@@ -242,33 +248,43 @@ if __name__ == '__main__':
                     pygame.draw.rect(screen, (7, 80, 75), obj_rect)
 
 
-
-
-
-            if animation == 'right' and player_movement[1]< 1.1:
-
-                p_pos = [player_rect.midbottom[0],
-                         player_rect.midbottom[1] + randint(0, 20) / 10 - 1]
-                p_mov = [-2, randint(0, 20) / 10 - 1]
-                p_size = randint(5,10)
-                particles.add_particle(p_pos, p_mov, p_size)
-                particles.itera_draw(screen, scroll)
-            elif animation == 'left' and player_movement[1] < 1.1:
-                p_pos = [player_rect.midbottom[0],
-                         player_rect.midbottom[1] + randint(0, 20) / 10 - 1]
-                p_mov = [+2, randint(0, 20) / 10 - 1]
-                p_size = randint(5, 10)
-                particles.add_particle(p_pos, p_mov, p_size)
-                particles.itera_draw(screen, scroll)
-            else:
-                particles.itera_draw(screen, scroll)
-
             n_lines = 20
-
             for line in range(n_lines):
                 offset = 100* (line - n_lines/2)
-                pygame.draw.line(screen, (50, 102, 14), (player_rect.x - scroll[0] - offset, player_rect.y - scroll[1] - (screen_height/2 + 200)),
-                                 (player_rect.x - scroll[0] - offset - 200, player_rect.y - scroll[1] + (screen_height/2 + 200)), 30)
+                pygame.draw.line(screen, (50, 102, 14), (player_rect.x - 0.30*scroll[0] - offset + 400,
+                                                         player_rect.y - 0.3*scroll[1] - (screen_height/2 + 200)),
+                                 (player_rect.x - 0.3*scroll[0] - offset - 400,
+                                  player_rect.y - 0.3*scroll[1]
+                                  + (screen_height/2 + 200)), 3)
+
+                pygame.draw.line(screen, (255, 255, 255), (player_rect.x - 0.55*scroll[0] - offset + 415,
+                                                           player_rect.y - 0.55*scroll[1] - (screen_height/2 + 200)),
+                                 (player_rect.x - 0.55*scroll[0] - offset - 385,
+                                  player_rect.y - 0.55*scroll[1] + (screen_height/2 + 200)), 1)
+
+
+
+            if int(n_frame/30) and (n_frame/30)%1 == 0 and animation is not 'idle':
+                debug(n_frame)
+                if animation == 'right' and player_movement[1]< 1.1:
+                    # p_pos = [player_rect.midbottom[0],
+                    #          player_rect.midbottom[1] + randint(0, 20) / 10 - 1]
+                    # p_mov = [+2, randint(0, 20) / 10 - 1]
+                    p_pos = [player_rect.midbottom[0],
+                             player_rect.midbottom[1]-7]
+                    p_mov = [-2, 0]
+                    p_size = randint(5,10)
+                    particles.add_particle(p_pos, p_mov, p_size)
+                    particles.itera_draw(screen, scroll)
+                elif animation == 'left' and player_movement[1] < 1.1:
+                    p_pos = [player_rect.midbottom[0],
+                             player_rect.midbottom[1]-7]
+                    p_mov = [+2, 0]
+                    p_size = randint(8, 10)
+                    particles.add_particle(p_pos, p_mov, p_size)
+                    particles.itera_draw(screen, scroll)
+
+            particles.itera_draw(screen, scroll)
 
 
 
@@ -345,4 +361,4 @@ if __name__ == '__main__':
             fps_counter.render()
             fps_counter.update()
             pygame.display.update()
-            clock.tick(60)
+            clock.tick(FPS)
