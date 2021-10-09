@@ -197,6 +197,7 @@ if __name__ == '__main__':
 
 
 
+
                     # if key_state[pygame.K_f] :
                     #     if animation_files_player['attack'] == 'assets/characters/EVil Wizard 2/Sprites/Attack1.png':
                     #         animation_files_player['attack'] = 'assets/characters/EVil Wizard 2/Sprites/Attack2.png'
@@ -228,8 +229,13 @@ if __name__ == '__main__':
             if n_frame > FPS+1:
                 n_frame = 0
 
-            if collisions['bottom'] and animation == 'jump':
-                animation = 'idle'
+            if collisions['bottom']:
+                if player_movement[0] > 0:
+                    animation='right'
+                elif player_movement[0] < 0:
+                    animation = 'left'
+                else:
+                    animation = 'idle'
 
             true_scroll[0] += (player_rect.x - true_scroll[0] - screen_width/2)/15
             true_scroll[1] += (player_rect.y - true_scroll[1] - screen_height/2)/15
@@ -340,7 +346,7 @@ if __name__ == '__main__':
             else:
                 air_timer += 1
 
-
+            debug(animation)
 
             vertical_momentum += 0.2
 
@@ -352,7 +358,8 @@ if __name__ == '__main__':
 
             player_movement[1] = vertical_momentum
 
-
+            if player_movement==[0,0]:
+                animation = 'idle'
 
             screen.blit(player, (player_rect.x - scroll[0], player_rect.y - scroll[1]))
             player_rect, collisions = move(player_rect, player_movement, tile_rects)
