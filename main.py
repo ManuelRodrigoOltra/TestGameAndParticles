@@ -8,7 +8,7 @@ from sys import exit
 from drawer.sprites import AnimatedPlayer, BackGroundScroll, BackGroundFile
 from random import randint
 from common.utils import FPSCounter, debug
-from particles.particles_generator import particles_basic
+from particles.particles_generator import particles_basic, particles_shot
 
 
 FPS = 60
@@ -72,6 +72,7 @@ if __name__ == '__main__':
     # screen = pygame.display.set_mode((screen_width, screen_height))
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption('FistPyGame')
+    pygame.mouse.set_visible(False)
 
     clock = pygame.time.Clock()
     title_font = pygame.font.Font(None, 50)
@@ -106,16 +107,6 @@ if __name__ == '__main__':
     green = [255, 255, 255]
     fps_counter = FPSCounter(screen, font, clock, green, (150, 10))
 
-    # animation_files_player = {'idle':'assets/characters/EVil Wizard 2/Sprites/Idle.png',
-    #                    'right':'assets/characters/EVil Wizard 2/Sprites/Run.png',
-    #                    'left': 'assets/characters/EVil Wizard 2/Sprites/Run.png',
-    #                    'fall':'assets/characters/EVil Wizard 2/Sprites/Fall.png',
-    #                    'jump':'assets/characters/EVil Wizard 2/Sprites/Jump.png',
-    #                    'attack': 'assets/characters/EVil Wizard 2/Sprites/Attack1.png',
-    #                    'hit': 'assets/characters/EVil Wizard 2/Sprites/Take hit.png',
-    #                    'death': 'assets/characters/EVil Wizard 2/Sprites/Death.png',
-    #                    'down': None,
-    #                    }
 
     player = pygame.image.load('assets/characters/Characters/character_0001.png')
     player_rect = player.get_rect(center=(screen_width/2, 0))
@@ -137,16 +128,6 @@ if __name__ == '__main__':
     tree_1_surface = pygame.image.load('assets\scenes\Block/tree_1.png').convert_alpha()
     tree_1_rect = tree_1_surface.get_rect()
 
-    # player = AnimatedPlayer(animation_files_player)
-    # player.move_speed = move_speed
-    # player_sprite= player.get_animation(animation,250,250)
-    # player_rect = pygame.Rect(0,0,60,98)
-    #
-    # player_rect.x = screen_width/2
-    #
-    # player.speed_animation = (0.3, 0)
-    # player_movement = [0, 0]
-
     tiles_rects = []
     tiles_width = 34
     tiles_height = 34
@@ -158,6 +139,8 @@ if __name__ == '__main__':
     #[loc, velocity, timer]
     # particles = []
     particles = particles_basic(screen)
+
+    shots = particles_shot()
 
 ########################################################################################################################
     ########################  BUCLE PRINCIPAL ########################
@@ -270,25 +253,13 @@ if __name__ == '__main__':
 
 
 
-            if int(n_frame/30) and (n_frame/30)%1 == 0 and animation is not 'idle':
-                debug(n_frame)
-                if animation == 'right' and player_movement[1]< 1.1:
-                    # p_pos = [player_rect.midbottom[0],
-                    #          player_rect.midbottom[1] + randint(0, 20) / 10 - 1]
-                    # p_mov = [+2, randint(0, 20) / 10 - 1]
-                    p_pos = [player_rect.midbottom[0],
-                             player_rect.midbottom[1]-7]
-                    p_mov = [-2, 0]
-                    p_size = randint(5,10)
-                    particles.add_particle(p_pos, p_mov, p_size)
-                    particles.itera_draw(screen, scroll)
-                elif animation == 'left' and player_movement[1] < 1.1:
-                    p_pos = [player_rect.midbottom[0],
-                             player_rect.midbottom[1]-7]
-                    p_mov = [+2, 0]
-                    p_size = randint(8, 10)
-                    particles.add_particle(p_pos, p_mov, p_size)
-                    particles.itera_draw(screen, scroll)
+            if int(n_frame/20) and (n_frame/20)%1 == 0 and animation is not 'idle':
+                p_pos = [player_rect.midbottom[0],
+                            player_rect.midbottom[1]-7]
+                p_mov = [-player_movement[0]/4, - player_movement[1]/8]
+                p_size = randint(8,10)
+                particles.add_particle(p_pos, p_mov, p_size)
+                particles.itera_draw(screen, scroll)
 
             particles.itera_draw(screen, scroll)
 
@@ -346,8 +317,6 @@ if __name__ == '__main__':
             else:
                 air_timer += 1
 
-            debug(animation)
-
             vertical_momentum += 0.2
 
             if vertical_momentum > 6:
@@ -361,8 +330,19 @@ if __name__ == '__main__':
             if player_movement==[0,0]:
                 animation = 'idle'
 
+
+            mx, my = pygame.mouse.get_pos()
+            ml, mc, mr = pygame.mouse.get_pressed(3)
+
+            if ml : shots.add_shot(player_rect.x - scroll[0] , player_rect.y - scroll[1], mx - scroll[0], my - scroll[1], 3)
+            shots.itera_draw(screen)
+            debug((player_rect.x - scroll[0] , player_rect.y - scroll[1], mx - scroll[0], my))
+
+            pygame.draw.circle(screen, (255, 255, 255), (mx, my), 4)
             screen.blit(player, (player_rect.x - scroll[0], player_rect.y - scroll[1]))
             player_rect, collisions = move(player_rect, player_movement, tile_rects)
+
+
 
 
             fps_counter.render()

@@ -1,4 +1,5 @@
 from random import randint
+import math as mt
 import pygame
 
 class particles_basic:
@@ -32,3 +33,50 @@ class particles_basic:
 class particles_phisics(particles_basic):
     pass
 
+
+
+
+class particles_shot(particles_basic):
+
+    def __init__(self):
+        self.list_shots = []
+
+    def add_shot(self, x0, y0, x1, y1, speed):
+        self.x0 = x0
+        self.y0 = y0
+        self.x1 = x1
+        self.y1 = y1
+        self.speed = speed
+        self.list_shots.append([[x0, y0], [self.get_mov_x(), self.get_mov_y()]])
+
+    def get_mov_x(self):
+        if self.x1-self.x0 < 0:
+            return -1 * self.speed*mt.cos(self.get_angle())
+        else:
+            return self.speed*mt.cos(self.get_angle())
+
+    def get_mov_y(self):
+        if self.y1 - self.y0 < 0:
+            return -1 * self.speed * mt.sin(self.get_angle())
+        else:
+            return self.speed * mt.sin(self.get_angle())
+
+    def get_trend(self):
+        try:
+            return mt.tan(abs(self.y1-self.y0)/abs(self.x1-self.x0))
+        except:
+            return 0
+
+    def get_angle(self):
+        return mt.atan(self.get_trend())
+
+    def itera_draw(self, win):
+
+        for shot in self.list_shots:
+            shot[0][0] += shot[1][0]
+            shot[0][1] += shot[1][1]
+            pygame.draw.circle(win, (255, 255, 255), (int(shot[0][0]), int(shot[0][1])), 5)
+
+
+
+    # def remove(self):
