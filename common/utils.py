@@ -31,3 +31,11 @@ class FPSCounter:
         self.fps_text_rect = self.fps_text.get_rect(center=(self.pos[0], self.pos[1]))
 
 
+
+def mouse_pointer(radius = 1):
+
+    surface = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA, 32).convert_alpha()
+    pygame.draw.circle(surface, [168, 50, 50], (radius, radius), radius, width=3)
+    pygame.draw.circle(surface, [168, 50, 50], (radius, radius), 3, width=0)
+    return surface
+
