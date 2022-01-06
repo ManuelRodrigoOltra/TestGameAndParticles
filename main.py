@@ -5,10 +5,23 @@
 
 import pygame
 from sys import exit
+import math as mt
 from drawer.sprites import AnimatedPlayer, BackGroundScroll, BackGroundFile
 from random import randint
 from common.utils import FPSCounter, debug, mouse_pointer
-from particles.particles_generator import particles_basic, particles_shot
+from particles.particles_generator import particles_basic, Particles_Shot, Spark
+from drawer.back_ground import Background_Rect, Background_Particle_Square
+
+
+
+#TO IMPLEMENT:
+# BACKGROUND WITH RECTANBLES AND PARTICLES RANDOM APEARING
+# SHOT GLOW IMPROVEMENT
+# INCLUDE DIRECTION IN THE SPARKS (REVERSE NORMAL DIRECTION)
+# MOUSE TIL THE END OF SCREEN (LEFT PART)
+# TEST CRASH
+
+
 
 
 FPS = 90
@@ -88,7 +101,8 @@ if __name__ == '__main__':
     air_timer = 0
     shot_enable = True
     shot_cadence = 60/2
-    bullet_speed = 3
+    bullet_speed = 15
+    sparks = []
 
     moving_right = False
     moving_left = False
@@ -101,7 +115,23 @@ if __name__ == '__main__':
     scroll = [0,0]
     true_scroll = [0,0]
 
+
+    #BackGround
     background_objects = [[0.25,[120,10,70,400]],[0.25,[280,30,40,400]],[0.5,[30,40, 90, 200]]]
+    rects_to_draw = []
+    n_rect_bg = 13
+    bg_start_height = -500
+    bg_sep_rect = 160
+    bg_width_rect = 60
+    bg_angle = 120
+
+    bg_particles_square = []
+    bg_enable_particle = True
+
+    bg_color = [174,182,191]
+    bg_rect_color = [46, 64, 82]
+    spark_color = [241, 196, 15]
+
 
     n_frame = 0
 
@@ -142,7 +172,7 @@ if __name__ == '__main__':
     # particles = []
     particles = particles_basic(screen)
 
-    shots = particles_shot()
+    shots = Particles_Shot()
 
 ########################################################################################################################
     ########################  BUCLE PRINCIPAL ########################
@@ -229,34 +259,61 @@ if __name__ == '__main__':
 
             #This pos is take as reference from the player
             offset_player = (player_rect.x - (screen_width / 2 + scroll[0]), 0)
-            screen.fill((146, 244, 255))
-
-            for background_object in background_objects:
-                obj_rect = pygame.Rect(background_object[1][0] - scroll[0] * background_object[0],
-                                       background_object[1][1] - scroll[1] * background_object[0],
-                                       background_object[1][2],  background_object[1][3])
-                if background_object[0] == 0.5:
-                    pygame.draw.rect(screen,(14,222,150), obj_rect)
-                else:
-                    pygame.draw.rect(screen, (7, 80, 75), obj_rect)
+            screen.fill(bg_color)
 
 
-            n_lines = 20
-            for line in range(n_lines):
-                offset = 100* (line - n_lines/2)
-                pygame.draw.line(screen, (50, 102, 14), (player_rect.x - 0.30*scroll[0] - offset + 400,
-                                                         player_rect.y - 0.3*scroll[1] - (screen_height/2 + 200)),
-                                 (player_rect.x - 0.3*scroll[0] - offset - 400,
-                                  player_rect.y - 0.3*scroll[1]
-                                  + (screen_height/2 + 200)), 3)
+            #####################################################################################
+            #BackGround particle generator
+            if not bg_particles_square:
+                for it in range(20):
+                    bg_particles_square.append(
+                        Background_Particle_Square([randint(0, screen_width), randint(0, screen_height)],
+                                                   [randint(-3, 3) / 3, randint(10, 30) / 40],
+                                                   randint(1, 20)))
 
-                pygame.draw.line(screen, (255, 255, 255), (player_rect.x - 0.55*scroll[0] - offset + 415,
-                                                           player_rect.y - 0.55*scroll[1] - (screen_height/2 + 200)),
-                                 (player_rect.x - 0.55*scroll[0] - offset - 385,
-                                  player_rect.y - 0.55*scroll[1] + (screen_height/2 + 200)), 1)
+            #TODO, revisar los cuadrados, no se generan nuevos
+            if int(n_frame/20) == 1 and bg_enable_particle:
+                bg_enable_particle = False
+                bg_particles_square.append(
+                    Background_Particle_Square([randint(0, screen_width), -40], [randint(-3, 3) / 3, randint(10, 30)/40],
+                                               randint(1, 20)))
+            elif not bg_enable_particle and int(n_frame/20) is not 1:
+                bg_enable_particle = True
+
+            for i, bg_particle_square in sorted(enumerate(bg_particles_square)):
+                if not 0 < bg_particle_square.loc[0] < screen_width or not -50 < bg_particle_square.loc[1] < screen_height:
+                    bg_particles_square.pop(i)
 
 
 
+
+            for bg_particle_square in bg_particles_square:
+                bg_particle_square.move()
+                surf_bg = pygame.transform.rotate(bg_particle_square.draw(), bg_particle_square.angle)
+                screen.blit(surf_bg, bg_particle_square.loc)
+
+            if not rects_to_draw:
+                for rect_bg in range(n_rect_bg):
+                    rects_to_draw.append(Background_Rect([screen_width/2, (rect_bg*bg_sep_rect) + bg_start_height],
+                                                         bg_rect_color, bg_angle, screen_width, bg_width_rect))
+            elif len(rects_to_draw) < n_rect_bg:
+                print('append')
+
+            for i, rect_to_draw in sorted(enumerate(rects_to_draw)):
+                rect_to_draw.move([0,0.3], 1)
+                rect_to_draw.draw(screen)
+                if rect_to_draw.loc[1] > screen_height*2:
+                    rects_to_draw.pop(i)
+                if i==0 and rect_to_draw.loc[1] > bg_start_height + bg_sep_rect:
+                    rects_to_draw.insert(0,
+                        Background_Rect([screen_width/2, bg_start_height], bg_rect_color, bg_angle,
+                                        screen_width, bg_width_rect))
+
+
+
+
+
+            #####################################################################################
             if int(n_frame/20) and (n_frame/20)%1 == 0 and animation is not 'idle':
                 p_pos = [player_rect.midbottom[0],
                             player_rect.midbottom[1]-7]
@@ -266,8 +323,6 @@ if __name__ == '__main__':
                 particles.itera_draw(screen, scroll)
 
             particles.itera_draw(screen, scroll)
-
-
 
             #Pintamos el escenario
             tile_rects = []
@@ -341,6 +396,7 @@ if __name__ == '__main__':
             mx, my = pygame.mouse.get_pos()
             ml, mc, mr = pygame.mouse.get_pressed(3)
 
+
             if ml and shot_enable:
                 shots.add_shot(player_rect.x, player_rect.y, mx + offset_player[0], my + offset_player[1], bullet_speed, scroll)
                 shot_enable = False
@@ -352,13 +408,22 @@ if __name__ == '__main__':
                 shot_cadence = 0
                 shot_enable = True
 
+            for i, spark in sorted(enumerate(sparks), reverse=True):
+                spark.move(1)
+                spark.draw(screen, scroll)
+                if not spark.alive:
+                    sparks.pop(i)
+
 
             index_to_remove = []
             for it in range(len(shots.list_shots)):
                 rect_shot = pygame.Rect(shots.list_shots[it][0][0], shots.list_shots[it][0][1], 2.5, 2.5)
                 collision_shot = collision_test(rect_shot, tile_rects)
                 if collision_shot:
+                    for sp in range(15):
+                        sparks.append(Spark([shots.list_shots[it][0][0],shots.list_shots[it][0][1]], mt.radians(randint(0,360)),randint(1,3), spark_color, 2))
                     index_to_remove.append(it)
+
                 elif abs(player_rect.x - shots.list_shots[it][0][0]) > screen_width/2 or abs(player_rect.y - shots.list_shots[it][0][1]) > screen_height/2:
                     index_to_remove.append(it)
 

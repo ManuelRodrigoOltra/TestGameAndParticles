@@ -38,11 +38,12 @@ class particles_phisics(particles_basic):
 
 
 
-class particles_shot(particles_basic):
+class Particles_Shot(particles_basic):
     CADENCE = 30
-    def __init__(self):
+    def __init__(self, color = [118, 68, 138]):
         self.cadence_counter = self.CADENCE
         self.list_shots = []
+        self.color = color
 
     def add_shot(self, x0, y0, x1, y1, speed, scroll):
         self.x0 = x0 - scroll[0]
@@ -82,10 +83,10 @@ class particles_shot(particles_basic):
         for shot in self.list_shots:
             shot[0][0] += shot[1][0]
             shot[0][1] -= shot[1][1]
-            pygame.draw.circle(win, (255, 255, 255), (int(shot[0][0] - scroll[0]), int(shot[0][1] - scroll[1])), 5)
+            pygame.draw.circle(win, self.color, (int(shot[0][0] - scroll[0]), int(shot[0][1] - scroll[1])), 5)
 
 
-            win.blit(self.circle_surf(20, (20, 20, 20)), (int(shot[0][0] - scroll[0] - 20), int(shot[0][1] - scroll[1] -20)),
+            win.blit(self.circle_surf(10, (20, 20, 20)), (int(shot[0][0] - scroll[0] - 10), int(shot[0][1] - scroll[1] -10)),
                      special_flags=pygame.BLEND_RGB_ADD )
 
     def circle_surf(self, radius, color):
@@ -136,7 +137,7 @@ class Spark():
         self.loc[1] += movement[1]
 
         # self.angle += 0.1
-        self.velocity_adjust(0.975, 0.2, 8, dt)
+        #self.velocity_adjust(0.975, 0.2, 8, dt)
         self.speed -= 0.1
 
         if self.speed <=0:
@@ -145,10 +146,10 @@ class Spark():
     def draw(self, surf, offset=[0,0]):
         if self.alive:
             points = [
-                [self.loc[0] + mt.cos(self.angle) * self.speed * self.scale, self.loc[1] + mt.sin(self.angle) * self.speed * self.scale],
-                [self.loc[0] + mt.cos(self.angle + mt.pi/2) * self.speed * self.scale * 0.3, self.loc[1] + mt.sin(self.angle + mt.pi/2) * self.speed * self.scale * 0.3],
-                [self.loc[0] - mt.cos(self.angle) * self.speed * self.scale * 3.5, self.loc[1] - mt.sin(self.angle) * self.speed * self.scale * 3.5],
-                [self.loc[0] + mt.cos(self.angle - mt.pi/2) * self.speed * self.scale * 0.3, self.loc[1] + mt.sin(self.angle - mt.pi/2) * self.speed * self.scale * 0.3]
+                [(self.loc[0] + mt.cos(self.angle) * self.speed * self.scale)-offset[0], (self.loc[1] + mt.sin(self.angle) * self.speed * self.scale)-offset[1]],
+                [(self.loc[0] + mt.cos(self.angle + mt.pi/2) * self.speed * self.scale * 0.3)-offset[0], (self.loc[1] + mt.sin(self.angle + mt.pi/2) * self.speed * self.scale * 0.3)-offset[1]],
+                [(self.loc[0] - mt.cos(self.angle) * self.speed * self.scale * 3.5)-offset[0], (self.loc[1] - mt.sin(self.angle) * self.speed * self.scale * 3.5)-offset[1]],
+                [(self.loc[0] + mt.cos(self.angle - mt.pi/2) * self.speed * self.scale * 0.3)-offset[0], (self.loc[1] + mt.sin(self.angle - mt.pi/2) * self.speed * self.scale * 0.3)-offset[1]]
             ]
             pygame.draw.polygon(surf, self.color, points)
 
