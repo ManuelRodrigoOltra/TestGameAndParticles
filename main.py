@@ -112,8 +112,8 @@ if __name__ == '__main__':
     jump_height = 80
     player_speed = 3
 
-    scroll = [0,0]
-    true_scroll = [0,0]
+    scroll = [1664, 890]
+    true_scroll = [1664, 890]
 
 
     #BackGround
@@ -126,11 +126,12 @@ if __name__ == '__main__':
     bg_angle = 120
 
     bg_particles_square = []
+    bg_particles_square_hole = []
     bg_enable_particle = True
 
-    bg_color = [174,182,191]
-    bg_rect_color = [46, 64, 82]
-    spark_color = [241, 196, 15]
+    bg_color = [200,191,231]
+    bg_rect_color = [147, 147, 255]
+    spark_color = [166, 129, 0]
 
 
     n_frame = 0
@@ -141,7 +142,8 @@ if __name__ == '__main__':
 
 
     player = pygame.image.load('assets/characters/Characters/character_0001.png')
-    player_rect = player.get_rect(center=(screen_width/2, 0))
+    # player_rect = player.get_rect(center=(screen_width/2, 0))
+    player_rect = player.get_rect(center=(1664, 890))
     player_rect = pygame.Rect(player_rect.center[0], player_rect.center[1], player_rect.width-5, player_rect.height)
     player_movement = [0, 0]
 
@@ -161,8 +163,8 @@ if __name__ == '__main__':
     tree_1_rect = tree_1_surface.get_rect()
 
 
-    tiles_width = 34
-    tiles_height = 34
+    tiles_width = 32
+    tiles_height = 32
     # tiles_width = tiles_1_rect.width
     # tiles_height = tiles_1_rect.height
 
@@ -272,32 +274,54 @@ if __name__ == '__main__':
                                                    randint(1, 20)))
 
             #TODO, revisar los cuadrados, no se generan nuevos
-            if int(n_frame/20) == 1 and bg_enable_particle:
-                bg_enable_particle = False
-                bg_particles_square.append(
-                    Background_Particle_Square([randint(0, screen_width), -40], [randint(-3, 3) / 3, randint(10, 30)/40],
-                                               randint(1, 20)))
-            elif not bg_enable_particle and int(n_frame/20) is not 1:
-                bg_enable_particle = True
+            # if int(n_frame/20) == 1 and bg_enable_particle:
+            #     bg_enable_particle = False
+            #     bg_particles_square.append(
+            #         Background_Particle_Square([randint(0, screen_width), -40], [randint(-3, 3) / 3, randint(10, 30)/40],
+            #                                    randint(1, 20)))
+            # elif not bg_enable_particle and int(n_frame/20) is not 1:
+            #     bg_enable_particle = True
 
             for i, bg_particle_square in sorted(enumerate(bg_particles_square)):
                 if not 0 < bg_particle_square.loc[0] < screen_width or not -50 < bg_particle_square.loc[1] < screen_height:
                     bg_particles_square.pop(i)
-
-
-
+                    bg_particles_square.append(
+                        Background_Particle_Square([randint(0, screen_width), -40],
+                                                   [randint(-3, 3) / 3, randint(10, 30) / 40],
+                                                   randint(1, 20)))
 
             for bg_particle_square in bg_particles_square:
                 bg_particle_square.move()
                 surf_bg = pygame.transform.rotate(bg_particle_square.draw(), bg_particle_square.angle)
                 screen.blit(surf_bg, bg_particle_square.loc)
+########################################################################################################################
+            if not bg_particles_square_hole:
+                for it in range(20):
+                    bg_particles_square_hole.append(
+                        Background_Particle_Square([randint(0, screen_width), randint(0, screen_height)],
+                                                   [randint(-3, 3) / 3, -1*randint(10, 30) / 40],
+                                                   randint(20, 50),80, 80,5))
+
+
+            for i, bg_particle_square_hole in sorted(enumerate(bg_particles_square_hole)):
+                if not -100 < bg_particle_square_hole.loc[0] < screen_width+100 or not -200 < bg_particle_square_hole.loc[1] < screen_height +150:
+                    bg_particles_square_hole.pop(i)
+                    bg_particles_square_hole.append(
+                        Background_Particle_Square([randint(0, screen_width), screen_height + 80],
+                                                   [randint(-3, 3) / 3, -1 * randint(10, 30) / 40],
+                                                   randint(20, 50),80, 80,5))
+
+            for bg_particle_square_hole in bg_particles_square_hole:
+                bg_particle_square_hole.move()
+                surf_bg = pygame.transform.rotate(bg_particle_square_hole.draw(), bg_particle_square_hole.angle)
+                screen.blit(surf_bg, bg_particle_square_hole.loc)
+
+#########################################################################################################
 
             if not rects_to_draw:
                 for rect_bg in range(n_rect_bg):
                     rects_to_draw.append(Background_Rect([screen_width/2, (rect_bg*bg_sep_rect) + bg_start_height],
                                                          bg_rect_color, bg_angle, screen_width, bg_width_rect))
-            elif len(rects_to_draw) < n_rect_bg:
-                print('append')
 
             for i, rect_to_draw in sorted(enumerate(rects_to_draw)):
                 rect_to_draw.move([0,0.3], 1)
@@ -360,7 +384,7 @@ if __name__ == '__main__':
                                 tiles_show_y = abs(player_rect.y - scroll[1] - pos_tiles_y) < \
                                                screen_height/2 + 5 * tiles_height
                                 if tiles_show_x and tiles_show_y:
-                                    screen.blit(tree_1_surface, (pos_tiles_x, pos_tiles_y - tree_1_rect.height))
+                                    screen.blit(tree_1_surface, (pos_tiles_x - 24, pos_tiles_y - tree_1_rect.height +32))
                         x += 1
                 y += 1
 

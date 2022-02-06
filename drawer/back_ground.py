@@ -43,11 +43,12 @@ class Background_Rect():
 
 
 class Background_Particle_Square():
-    def __init__(self, loc, vel, angle=0, width=20, height=20):
+    def __init__(self, loc, vel, angle=0, width=20, height=20, width_line=0):
         self.loc = loc
         self.vel = vel
         self.angle = angle
         self.size = [width, height]
+        self.width_line = width_line
 
     #sig 1 up 0 down
 
@@ -60,7 +61,7 @@ class Background_Particle_Square():
     def draw(self):
         surf = pygame.Surface((2*self.size[0], 2*self.size[1]))
         pygame.draw.rect(surf, [255, 255, 255], (0,0,
-                         self.size[0], self.size[1]))
+                         self.size[0], self.size[1]), width=self.width_line)
         # surf = pygame.transform.rotate(surf, self.angle)
         surf.set_colorkey(0, 0)
         return surf
