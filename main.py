@@ -73,7 +73,6 @@ def collision_test(rect, tiles):
 
 
 
-
 if __name__ == '__main__':
 
     pygame.init()
@@ -173,7 +172,6 @@ if __name__ == '__main__':
     #[loc, velocity, timer]
     # particles = []
     particles = particles_basic(screen)
-
     shots = Particles_Shot()
 
 ########################################################################################################################
@@ -211,9 +209,6 @@ if __name__ == '__main__':
                             animation = 'left'
                         moving_right = False
                         moving_left = True
-
-
-
 
                     # if key_state[pygame.K_f] :
                     #     if animation_files_player['attack'] == 'assets/characters/EVil Wizard 2/Sprites/Attack1.png':
